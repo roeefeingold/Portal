@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk Portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .header {
+            text-align: center; padding: 40px 20px 20px;
+        }
+        .header h1 { font-size: 2.5rem; color: #e94560; }
+        .header p { color: #888; margin-top: 5px; }
+        .nav { text-align: right; padding: 15px 30px; }
+        .nav a { color: #e94560; text-decoration: none; font-size: 0.9rem; margin-left: 15px; }
+        .cards {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 25px; padding: 30px; max-width: 1200px; margin: 0 auto;
+        }
+        .card {
+            background: #16213e; border-radius: 12px; width: 220px;
+            text-decoration: none; color: #eee; transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden; border: 1px solid #0f3460;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(233,69,96,0.3); }
+        .card-img {
+            width: 100%; height: 140px; object-fit: cover; background: #0f3460;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; color: #e94560;
+        }
+        .card-img img { width: 100%; height: 100%; object-fit: cover; }
+        .card-name { padding: 15px; text-align: center; font-weight: bold; font-size: 1.1rem; }
+
+        /* Admin forms */
+        .admin-bar {
+            background: #0f3460; padding: 5px 10px; font-size: 0.8rem;
+            display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;
+        }
+        .admin-bar input[type="text"] {
+            padding: 4px 8px; border: 1px solid #333; border-radius: 4px;
+            background: #1a1a2e; color: #eee; font-size: 0.8rem;
+        }
+        .admin-bar input[type="file"] { font-size: 0.75rem; color: #aaa; max-width: 150px; }
+        .admin-bar button {
+            padding: 4px 10px; border: none; border-radius: 4px; cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .btn-save { background: #e94560; color: #fff; }
+        .btn-delete { background: #c0392b; color: #fff; }
+
+        .add-form {
+            background: #16213e; border-radius: 12px; padding: 20px;
+            max-width: 500px; margin: 20px auto; border: 1px solid #0f3460;
+        }
+        .add-form h3 { margin-bottom: 15px; color: #e94560; }
+        .add-form input {
+            display: block; width: 100%; margin-bottom: 10px; padding: 8px;
+            border: 1px solid #333; border-radius: 6px; background: #1a1a2e; color: #eee;
+        }
+        .add-form button {
+            background: #e94560; color: #fff; border: none; padding: 10px 20px;
+            border-radius: 6px; cursor: pointer; font-size: 1rem;
+        }
+        .flash { text-align: center; color: #e94560; padding: 10px; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        {% if is_admin %}
+            <a href="{{ url_for('admin_logout') }}">Logout Admin</a>
+        {% endif %}
+    </div>
+
+    <div class="header">
+        <h1>Risk Portal</h1>
+        <p>Quick access to all applications</p>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="flash">{{ msg }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="cards">
+        {% for link in links %}
+        <div>
+            <a href="{{ link.url }}" target="_blank" class="card">
+                <div class="card-img">
+                    {% if link.image %}
+                        <img src="{{ url_for('static', filename='uploads/' + link.image) }}" alt="{{ link.name }}">
+                    {% else %}
+                        &#9741;
+                    {% endif %}
+                </div>
+                <div class="card-name">{{ link.name }}</div>
+            </a>
+            {% if is_admin %}
+            <div class="admin-bar">
+                <form method="POST" action="{{ url_for('edit_link', link_id=link.id) }}" enctype="multipart/form-data" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">
+                    <input type="text" name="name" value="{{ link.name }}" placeholder="Name">
+                    <input type="text" name="url" value="{{ link.url }}" placeholder="URL">
+                    <input type="file" name="image" accept="image/*">
+                    <button type="submit" class="btn-save">Save</button>
+                </form>
+                <form method="POST" action="{{ url_for('delete_link', link_id=link.id) }}">
+                    <button type="submit" class="btn-delete">X</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_admin %}
+    <div class="add-form">
+        <h3>Add New Link</h3>
+        <form method="POST" action="{{ url_for('add_link') }}" enctype="multipart/form-data">
+            <input type="text" name="name" placeholder="App Name" required>
+            <input type="text" name="url" placeholder="https://example.com" required>
+            <input type="file" name="image" accept="image/*">
+            <button type="submit">Add Link</button>
+        </form>
+    </div>
+    {% endif %}
+</body>
+</html>
