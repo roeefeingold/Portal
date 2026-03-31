@@ -104,6 +104,13 @@
             cursor: pointer; font-size: 0.8rem; font-weight: 500;
             font-family: 'Inter', sans-serif;
         }
+        .move-btns { display: flex; gap: 4px; }
+        .btn-move {
+            padding: 6px 10px; border: none; border-radius: 7px;
+            cursor: pointer; font-size: 0.85rem;
+            font-family: 'Inter', sans-serif;
+            background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.4);
+        }
         .btn-save { background: #1a3a6e; color: #7aa2e8; }
         .btn-delete {
             background: rgba(239, 68, 68, 0.1); color: #ef4444;
@@ -220,6 +227,14 @@
                 </a>
                 {% if is_admin %}
                 <div class="admin-bar">
+                    <div class="move-btns">
+                        <form method="POST" action="{{ url_for('move_link', link_id=link.id, direction='up') }}" style="display:inline;">
+                            <button type="submit" class="btn-move">&larr;</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('move_link', link_id=link.id, direction='down') }}" style="display:inline;">
+                            <button type="submit" class="btn-move">&rarr;</button>
+                        </form>
+                    </div>
                     <form method="POST" action="{{ url_for('edit_link', link_id=link.id) }}" enctype="multipart/form-data" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
                         <input type="text" name="name" value="{{ link.name }}" placeholder="Name">
                         <input type="text" name="url" value="{{ link.url }}" placeholder="URL">
