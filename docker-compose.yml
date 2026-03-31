@@ -9,6 +9,11 @@ services:
       POSTGRES_DB: portal
     volumes:
       - portal-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portal"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
     networks:
       - portal-net
     restart: unless-stopped
@@ -29,7 +34,8 @@ services:
     volumes:
       - portal-uploads:/app/static/uploads
     depends_on:
-      - portal-db
+      portal-db:
+        condition: service_healthy
     networks:
       - portal-net
     restart: unless-stopped
