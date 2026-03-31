@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: portal
+      POSTGRES_PASSWORD: portal
+      POSTGRES_DB: portal
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_USER: portal
+      POSTGRES_PASSWORD: portal
+      POSTGRES_HOST: db
+      POSTGRES_DB: portal
+      ADMIN_PASSWORD: admin3
+      SECRET_KEY: change-me-in-production
+    volumes:
+      - uploads:/app/static/uploads
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  uploads:
