@@ -77,10 +77,6 @@
         .card-name {
             font-size: 0.95rem; font-weight: 600; color: #d0dae8;
         }
-        .card-url {
-            font-size: 0.72rem; color: rgba(255, 255, 255, 0.18);
-            margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
 
         /* Admin edit bar */
         .admin-bar {
@@ -220,7 +216,6 @@
                     </div>
                     <div class="card-body">
                         <div class="card-name">{{ link.name }}</div>
-                        <div class="card-url">{{ link.url }}</div>
                     </div>
                 </a>
                 {% if is_admin %}
