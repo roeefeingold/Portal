@@ -68,8 +68,6 @@ def add_link():
     if not name or not url_val:
         flash("Name and URL are required")
         return redirect(url_for("index"))
-    if not url_val.startswith(("http://", "https://")):
-        url_val = "https://" + url_val
     image_path = ""
     if "image" in request.files:
         file = request.files["image"]
@@ -89,10 +87,7 @@ def edit_link(link_id):
         return redirect(url_for("admin_login"))
     link = Link.query.get_or_404(link_id)
     link.name = request.form.get("name", link.name).strip()
-    url_val = request.form.get("url", link.url).strip()
-    if not url_val.startswith(("http://", "https://")):
-        url_val = "https://" + url_val
-    link.url = url_val
+    link.url = request.form.get("url", link.url).strip()
     if "image" in request.files:
         file = request.files["image"]
         if file and file.filename and allowed_file(file.filename):
