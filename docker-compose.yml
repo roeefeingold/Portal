@@ -1,31 +1,45 @@
 services:
-  db:
+  portal-db:
     image: postgres:16-alpine
+    container_name: portal-db
+    hostname: portal-db
     environment:
       POSTGRES_USER: portal
       POSTGRES_PASSWORD: portal
       POSTGRES_DB: portal
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - portal-pgdata:/var/lib/postgresql/data
+    networks:
+      - portal-net
     restart: unless-stopped
 
-  web:
+  portal-web:
     build: .
+    container_name: portal-web
+    hostname: portal-web
     ports:
       - "8000:8000"
     environment:
       POSTGRES_USER: portal
       POSTGRES_PASSWORD: portal
-      POSTGRES_HOST: db
+      POSTGRES_HOST: portal-db
       POSTGRES_DB: portal
       ADMIN_PASSWORD: admin3
       SECRET_KEY: change-me-in-production
     volumes:
-      - uploads:/app/static/uploads
+      - portal-uploads:/app/static/uploads
     depends_on:
-      - db
+      - portal-db
+    networks:
+      - portal-net
     restart: unless-stopped
 
+networks:
+  portal-net:
+    name: portal-net
+
 volumes:
-  pgdata:
-  uploads:
+  portal-pgdata:
+    name: portal-pgdata
+  portal-uploads:
+    name: portal-uploads
