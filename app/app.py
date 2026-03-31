@@ -35,6 +35,14 @@ def allowed_file(filename):
 
 with app.app_context():
     db.create_all()
+    # migrate: add position column if missing (keeps existing data)
+    with db.engine.connect() as conn:
+        cols = [r[0] for r in conn.execute(db.text(
+            "SELECT column_name FROM information_schema.columns WHERE table_name='link'"
+        ))]
+        if "position" not in cols:
+            conn.execute(db.text("ALTER TABLE link ADD COLUMN position INTEGER DEFAULT 0"))
+            conn.commit()
 
 
 @app.route("/")
