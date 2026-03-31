@@ -1,4 +1,5 @@
 import os
+import time
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
@@ -33,16 +34,25 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def init_db():
+    for attempt in range(10):
+        try:
+            db.create_all()
+            with db.engine.connect() as conn:
+                cols = [r[0] for r in conn.execute(db.text(
+                    "SELECT column_name FROM information_schema.columns WHERE table_name='link'"
+                ))]
+                if "position" not in cols:
+                    conn.execute(db.text("ALTER TABLE link ADD COLUMN position INTEGER DEFAULT 0"))
+                    conn.commit()
+            return
+        except Exception:
+            time.sleep(1)
+    raise RuntimeError("Cannot connect to database")
+
+
 with app.app_context():
-    db.create_all()
-    # migrate: add position column if missing (keeps existing data)
-    with db.engine.connect() as conn:
-        cols = [r[0] for r in conn.execute(db.text(
-            "SELECT column_name FROM information_schema.columns WHERE table_name='link'"
-        ))]
-        if "position" not in cols:
-            conn.execute(db.text("ALTER TABLE link ADD COLUMN position INTEGER DEFAULT 0"))
-            conn.commit()
+    init_db()
 
 
 @app.route("/")
