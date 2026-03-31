@@ -26,6 +26,7 @@ class Link(db.Model):
     name = db.Column(db.String(200), nullable=False)
     url = db.Column(db.String(500), nullable=False)
     image = db.Column(db.String(300), default="")
+    position = db.Column(db.Integer, default=0)
 
 
 def allowed_file(filename):
@@ -38,7 +39,7 @@ with app.app_context():
 
 @app.route("/")
 def index():
-    links = Link.query.order_by(Link.id).all()
+    links = Link.query.order_by(Link.position, Link.id).all()
     is_admin = session.get("admin", False)
     return render_template("index.html", links=links, is_admin=is_admin)
 
@@ -68,8 +69,6 @@ def add_link():
     if not name or not url_val:
         flash("Name and URL are required")
         return redirect(url_for("index"))
-    if not url_val.startswith(("http://", "https://")):
-        url_val = "https://" + url_val
     image_path = ""
     if "image" in request.files:
         file = request.files["image"]
@@ -77,7 +76,8 @@ def add_link():
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
             image_path = filename
-    link = Link(name=name, url=url_val, image=image_path)
+    max_pos = db.session.query(db.func.coalesce(db.func.max(Link.position), -1)).scalar()
+    link = Link(name=name, url=url_val, image=image_path, position=max_pos + 1)
     db.session.add(link)
     db.session.commit()
     return redirect(url_for("index"))
@@ -89,10 +89,7 @@ def edit_link(link_id):
         return redirect(url_for("admin_login"))
     link = Link.query.get_or_404(link_id)
     link.name = request.form.get("name", link.name).strip()
-    url_val = request.form.get("url", link.url).strip()
-    if not url_val.startswith(("http://", "https://")):
-        url_val = "https://" + url_val
-    link.url = url_val
+    link.url = request.form.get("url", link.url).strip()
     if "image" in request.files:
         file = request.files["image"]
         if file and file.filename and allowed_file(file.filename):
@@ -109,6 +106,22 @@ def delete_link(link_id):
         return redirect(url_for("admin_login"))
     link = Link.query.get_or_404(link_id)
     db.session.delete(link)
+    db.session.commit()
+    return redirect(url_for("index"))
+
+
+@app.route("/admin/move/<int:link_id>/<direction>", methods=["POST"])
+def move_link(link_id, direction):
+    if not session.get("admin"):
+        return redirect(url_for("admin_login"))
+    links = Link.query.order_by(Link.position, Link.id).all()
+    idx = next((i for i, l in enumerate(links) if l.id == link_id), None)
+    if idx is None:
+        return redirect(url_for("index"))
+    if direction == "up" and idx > 0:
+        links[idx].position, links[idx - 1].position = links[idx - 1].position, links[idx].position
+    elif direction == "down" and idx < len(links) - 1:
+        links[idx].position, links[idx + 1].position = links[idx + 1].position, links[idx].position
     db.session.commit()
     return redirect(url_for("index"))
 
